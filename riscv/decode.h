@@ -175,7 +175,14 @@ private:
 
 #ifndef RISCV_ENABLE_COMMITLOG
 # define WRITE_REG(reg, value) STATE.XPR.write(reg, value)
-# define WRITE_FREG(reg, value) DO_WRITE_FREG(reg, freg(value))
+# define WRITE_FREG(reg, value) ({ \
+    if (p->supports_extension(EXT_ZFINX)) { \
+      STATE.XPR.write(reg, value) \
+    } else { \
+      DO_WRITE_FREG(reg, freg(value)) \
+    } \
+  })
+
 # define WRITE_VSTATUS
 #else
    /* 0 : int
