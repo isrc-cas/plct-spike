@@ -1544,7 +1544,7 @@ reg_t processor_t::get_csr(int which, insn_t insn, bool write, bool peek)
     }
     case CSR_MSTATUS: 
       if (supports_extension(EXT_ZFINX)) {
-        ret(state.mstatus &= ~MSTATUS_FS)
+        ret(state.mstatus &= ~MSTATUS_FS);
       }
       else {
         ret(state.mstatus);

@@ -167,6 +167,8 @@ private:
 #define FLEN (p->get_flen())
 #define READ_REG(reg) STATE.XPR[reg]
 #define READ_FREG(reg) STATE.FPR[reg]
+
+
 #define RD READ_REG(insn.rd())
 #define RS1 READ_REG(insn.rs1())
 #define RS2 READ_REG(insn.rs2())
@@ -175,14 +177,33 @@ private:
 
 #ifndef RISCV_ENABLE_COMMITLOG
 # define WRITE_REG(reg, value) STATE.XPR.write(reg, value)
-# define WRITE_FREG(reg, value) ({ \
-    if (p->supports_extension(EXT_ZFINX)) { \
-      STATE.XPR.write(reg, value) \
-    } else { \
-      DO_WRITE_FREG(reg, freg(value)) \
+# define WRITE_FREG(reg, value) do{ \
+  if (p->supports_extension(EXT_ZFINX)) { \
+    require(FLEN != 128); \
+    if(xlen == 32&& FLEN == 64)  { \
+      require(reg % 2 == 0); \
+      if(STATE.mstatus & MSTATUS_MBE) { \
+        STATE.XPR.write(reg + 1, (uint32_t)((value.v << 32) >> 32)); \
+        STATE.XPR.write(reg, (uint32_t)(value.v >> 32)); \
+      } else {\
+        STATE.XPR.write(reg, (uint32_t)((value.v << 32) >> 32)); \
+        STATE.XPR.write(reg + 1, (uint32_t)(value.v >> 32)); \
+      }\
     } \
-  })
-
+    else  { \
+      STATE.XPR.write(reg, value.v); \
+    } \
+  } else { \
+    if(reg != 0) DO_WRITE_FREG(reg, freg(value)); \
+  } \
+}while(0)
+# define WRITE_NOALIGN_FREG(reg, value) do{ \
+  if (p->supports_extension(EXT_ZFINX)) { \
+    STATE.XPR.write(reg, value); \
+  } else { \
+    if(reg != 0) DO_WRITE_FREG(reg, freg(value)); \
+  } \
+}while(0)
 # define WRITE_VSTATUS
 #else
    /* 0 : int
@@ -217,9 +238,17 @@ private:
 #define RVC_SP READ_REG(X_SP)
 
 // FPU macros
-#define FRS1 READ_FREG(insn.rs1())
-#define FRS2 READ_FREG(insn.rs2())
-#define FRS3 READ_FREG(insn.rs3())
+#define ZFINX_PAIR_REG(reg) (STATE.mstatus & MSTATUS_MBE)?(uint64_t)((READ_REG(reg + 1) << 32) >> 32) \
+  + (READ_REG(reg) << 32):(uint64_t)((READ_REG(reg) << 32) >> 32) + (READ_REG(reg + 1) << 32)
+#define DO_ZFINX_REG(reg) ({require(reg % 2 == 0); \
+  (reg?ZFINX_PAIR_REG(reg):(uint64_t)0); })
+#define ZFINX_REG(reg) (xlen == 32 && FLEN == 64)?DO_ZFINX_REG(reg):(uint64_t)STATE.XPR[reg]
+#define FRS1 p->supports_extension(EXT_ZFINX)?freg(f64(ZFINX_REG(insn.rs1()))):READ_FREG(insn.rs1())
+#define FRS2 p->supports_extension(EXT_ZFINX)?freg(f64(ZFINX_REG(insn.rs2()))):READ_FREG(insn.rs2())
+#define FRS3 p->supports_extension(EXT_ZFINX)?freg(f64(ZFINX_REG(insn.rs3()))):READ_FREG(insn.rs3())
+#define FRS1_S p->supports_extension(EXT_ZFINX)?freg(f64((uint64_t)STATE.XPR[insn.rs1()]):READ_FREG(insn.rs1())
+#define FRS2_S p->supports_extension(EXT_ZFINX)?freg(f64((uint64_t)STATE.XPR[insn.rs2()]):READ_FREG(insn.rs2())
+#define FRS3_S p->supports_extension(EXT_ZFINX)?freg(f64((uint64_t)STATE.XPR[insn.rs3()]):READ_FREG(insn.rs3())
 #define dirty_fp_state (STATE.mstatus |= MSTATUS_FS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define dirty_ext_state (STATE.mstatus |= MSTATUS_XS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define dirty_vs_state (STATE.mstatus |= MSTATUS_VS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
