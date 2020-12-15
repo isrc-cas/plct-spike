@@ -1,3 +1,7 @@
 require_extension(EXT_ZFH);
 require_fp;
-WRITE_FRD(fsgnj16(FRS1, FRS2, true, false));
+if(p->supports_extension(EXT_ZFINX)) {
+  WRITE_FRD_H(fsgnj16(FRS1_H, FRS2_H, true, false).v);
+} else {
+  WRITE_FRD(fsgnj16(FRS1, FRS2, true, false));
+}

@@ -271,7 +271,6 @@ void processor_t::parse_isa_string(const char* str)
         extension_table[EXT_ZFH] = true;
       } else if (ext_str == "zfinx") {
         extension_table[EXT_ZFINX] = true;
-        max_isa |= 1L << ('f' - 'a');
       } else {
         sprintf(error_msg, "unsupported extension '%s'", ext_str.c_str());
         bad_isa_string(str, error_msg);
@@ -1545,6 +1544,7 @@ reg_t processor_t::get_csr(int which, insn_t insn, bool write, bool peek)
     case CSR_MSTATUS: 
       if (supports_extension(EXT_ZFINX)) {
         ret(state.mstatus &= ~MSTATUS_FS);
+        //ret(state.mstatus);
       }
       else {
         ret(state.mstatus);

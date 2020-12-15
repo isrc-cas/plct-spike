@@ -174,36 +174,10 @@ private:
 #define RS2 READ_REG(insn.rs2())
 #define RS3 READ_REG(insn.rs3())
 #define WRITE_RD(value) WRITE_REG(insn.rd(), value)
-
 #ifndef RISCV_ENABLE_COMMITLOG
 # define WRITE_REG(reg, value) STATE.XPR.write(reg, value)
-# define WRITE_FREG(reg, value) do{ \
-  if (p->supports_extension(EXT_ZFINX)) { \
-    require(FLEN != 128); \
-    if(xlen == 32&& FLEN == 64)  { \
-      require(reg % 2 == 0); \
-      if(STATE.mstatus & MSTATUS_MBE) { \
-        STATE.XPR.write(reg + 1, (uint32_t)((value.v << 32) >> 32)); \
-        STATE.XPR.write(reg, (uint32_t)(value.v >> 32)); \
-      } else {\
-        STATE.XPR.write(reg, (uint32_t)((value.v << 32) >> 32)); \
-        STATE.XPR.write(reg + 1, (uint32_t)(value.v >> 32)); \
-      }\
-    } \
-    else  { \
-      STATE.XPR.write(reg, value.v); \
-    } \
-  } else { \
-    if(reg != 0) DO_WRITE_FREG(reg, freg(value)); \
-  } \
-}while(0)
-# define WRITE_NOALIGN_FREG(reg, value) do{ \
-  if (p->supports_extension(EXT_ZFINX)) { \
-    STATE.XPR.write(reg, value); \
-  } else { \
-    if(reg != 0) DO_WRITE_FREG(reg, freg(value)); \
-  } \
-}while(0)
+# define WRITE_FREG(reg, value) DO_WRITE_FREG(reg, freg(value))
+
 # define WRITE_VSTATUS
 #else
    /* 0 : int
@@ -242,18 +216,46 @@ private:
   + (READ_REG(reg) << 32):(uint64_t)((READ_REG(reg) << 32) >> 32) + (READ_REG(reg + 1) << 32)
 #define DO_ZFINX_REG(reg) ({require(reg % 2 == 0); \
   (reg?ZFINX_PAIR_REG(reg):(uint64_t)0); })
-#define ZFINX_REG(reg) (xlen == 32 && FLEN == 64)?DO_ZFINX_REG(reg):(uint64_t)STATE.XPR[reg]
-#define FRS1 p->supports_extension(EXT_ZFINX)?freg(f64(ZFINX_REG(insn.rs1()))):READ_FREG(insn.rs1())
-#define FRS2 p->supports_extension(EXT_ZFINX)?freg(f64(ZFINX_REG(insn.rs2()))):READ_FREG(insn.rs2())
-#define FRS3 p->supports_extension(EXT_ZFINX)?freg(f64(ZFINX_REG(insn.rs3()))):READ_FREG(insn.rs3())
-#define FRS1_S p->supports_extension(EXT_ZFINX)?freg(f64((uint64_t)STATE.XPR[insn.rs1()]):READ_FREG(insn.rs1())
-#define FRS2_S p->supports_extension(EXT_ZFINX)?freg(f64((uint64_t)STATE.XPR[insn.rs2()]):READ_FREG(insn.rs2())
-#define FRS3_S p->supports_extension(EXT_ZFINX)?freg(f64((uint64_t)STATE.XPR[insn.rs3()]):READ_FREG(insn.rs3())
+#define FRS1 READ_FREG(insn.rs1())
+#define FRS2 READ_FREG(insn.rs2())
+#define FRS3 READ_FREG(insn.rs3())
+#define FRS1_H freg(f16(STATE.XPR[insn.rs1()] & (uint16_t)-1))
+#define FRS1_F freg(f32(STATE.XPR[insn.rs1()] & (uint32_t)-1))
+#define FRS1_D (xlen == 32 ?freg(f64(DO_ZFINX_REG(insn.rs1()))):freg(f64(STATE.XPR[insn.rs1()] & (uint64_t)-1)))
+#define FRS2_H freg(f16(STATE.XPR[insn.rs2()] & (uint16_t)-1))
+#define FRS2_F freg(f32(STATE.XPR[insn.rs2()] & (uint32_t)-1))
+#define FRS2_D (xlen == 32 ?freg(f64(DO_ZFINX_REG(insn.rs2()))):freg(f64(STATE.XPR[insn.rs2()] & (uint64_t)-1)))
+#define FRS3_H freg(f16(STATE.XPR[insn.rs3()] & (uint16_t)-1))
+#define FRS3_F freg(f32(STATE.XPR[insn.rs3()] & (uint32_t)-1))
+#define FRS3_D (xlen == 32 ?freg(f64(DO_ZFINX_REG(insn.rs3()))):freg(f64(STATE.XPR[insn.rs3()] & (uint64_t)-1)))
+
 #define dirty_fp_state (STATE.mstatus |= MSTATUS_FS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define dirty_ext_state (STATE.mstatus |= MSTATUS_XS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define dirty_vs_state (STATE.mstatus |= MSTATUS_VS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define DO_WRITE_FREG(reg, value) (STATE.FPR.write(reg, value), dirty_fp_state)
 #define WRITE_FRD(value) WRITE_FREG(insn.rd(), value)
+#define WRITE_FREG_H(reg, value) (STATE.XPR.write(reg, value), dirty_fp_state)
+#define WRITE_FREG_F(reg, value) (STATE.XPR.write(reg, value), dirty_fp_state)
+#define WRITE_FREG_D(reg, value) do{ \
+  if(xlen == 32)  { \
+    require(reg % 2 == 0); \
+    if(reg != 0) { \
+      if(STATE.mstatus & MSTATUS_MBE) { \
+        STATE.XPR.write(reg + 1, (uint32_t)((value << 32) >> 32)); \
+        STATE.XPR.write(reg, (uint32_t)(value >> 32)); \
+      } else {\
+        STATE.XPR.write(reg, (uint32_t)((value << 32) >> 32)); \
+        STATE.XPR.write(reg + 1, (uint32_t)(value >> 32)); \
+      }\
+    } \
+  } \
+  else  { \
+    STATE.XPR.write(reg, value); \
+  } \
+}while(0)
+#define WRITE_FRD_H(value) WRITE_FREG_H(insn.rd(), value)
+#define WRITE_FRD_F(value) WRITE_FREG_F(insn.rd(), value)
+#define WRITE_FRD_D(value) WRITE_FREG_D(insn.rd(), value)
  
 #define SHAMT (insn.i_imm() & 0x3F)
 #define BRANCH_TARGET (pc + insn.sb_imm())
