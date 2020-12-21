@@ -228,14 +228,15 @@ private:
 #define FRS3_H freg(f16(STATE.XPR[insn.rs3()] & (uint16_t)-1))
 #define FRS3_F freg(f32(STATE.XPR[insn.rs3()] & (uint32_t)-1))
 #define FRS3_D (xlen == 32 ?freg(f64(DO_ZFINX_REG(insn.rs3()))):freg(f64(STATE.XPR[insn.rs3()] & (uint64_t)-1)))
-
+#define ZFINX_BOXING_H(value) ((uint64_t)value | (((uint64_t)-1) << 16)) 
+#define ZFINX_BOXING_F(value) ((uint64_t)value | (((uint64_t)-1) << 32))
 #define dirty_fp_state (STATE.mstatus |= MSTATUS_FS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define dirty_ext_state (STATE.mstatus |= MSTATUS_XS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define dirty_vs_state (STATE.mstatus |= MSTATUS_VS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
 #define DO_WRITE_FREG(reg, value) (STATE.FPR.write(reg, value), dirty_fp_state)
 #define WRITE_FRD(value) WRITE_FREG(insn.rd(), value)
-#define WRITE_FREG_H(reg, value) (STATE.XPR.write(reg, value), dirty_fp_state)
-#define WRITE_FREG_F(reg, value) (STATE.XPR.write(reg, value), dirty_fp_state)
+#define WRITE_FREG_H(reg, value) (STATE.XPR.write(reg, ZFINX_BOXING_H(value)), dirty_fp_state)
+#define WRITE_FREG_F(reg, value) (STATE.XPR.write(reg, ZFINX_BOXING_F(value)), dirty_fp_state)
 #define WRITE_FREG_D(reg, value) do{ \
   if(xlen == 32)  { \
     require(reg % 2 == 0); \
