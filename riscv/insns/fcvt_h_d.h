@@ -2,5 +2,9 @@ require_extension(EXT_ZFH);
 require_extension('D');
 require_fp;
 softfloat_roundingMode = RM;
-WRITE_FRD(f64_to_f16(f64(FRS1)));
+if(p->supports_extension(EXT_ZFINX)) {
+  WRITE_FRD_H(f64_to_f16(f64(FRS1_D)).v);
+} else {
+  WRITE_FRD(f64_to_f16(f64(FRS1)));
+}
 set_fp_exceptions;

@@ -85,10 +85,6 @@ typedef struct
   bool load;
 } mcontrol_t;
 
-inline reg_t BITS(reg_t v, int hi, int lo){
-  return (v >> lo) & ((2 << (hi - lo)) - 1);
-}
-
 enum VRM{
   RNU = 0,
   RNE,
@@ -246,11 +242,17 @@ typedef enum {
 typedef enum {
   // 65('A') ~ 90('Z') is reserved for standard isa in misa
   EXT_ZFH   = 0,
-  EXT_ZVAMO,
   EXT_ZVEDIV,
-  EXT_ZVLSSEG,
-  EXT_ZVQMAC,
+  EXT_ZFINX,
 } isa_extension_t;
+
+typedef enum {
+  IMPL_MMU_SV32,
+  IMPL_MMU_SV39,
+  IMPL_MMU_SV48,
+  IMPL_MMU_BARE,
+  IMPL_MMU,
+} impl_extension_t;
 
 // Count number of contiguous 1 bits starting from the LSB.
 static int cto(reg_t val)
@@ -279,7 +281,9 @@ public:
   void reset();
   void step(size_t n); // run for n cycles
   void set_csr(int which, reg_t val);
-  reg_t get_csr(int which);
+  uint32_t get_id() const { return id; }
+  reg_t get_csr(int which, insn_t insn, bool write, bool peek = 0);
+  reg_t get_csr(int which) { return get_csr(which, insn_t(0), false, true); }
   mmu_t* get_mmu() { return mmu; }
   state_t* get_state() { return &state; }
   unsigned get_xlen() { return xlen; }
@@ -296,6 +300,10 @@ public:
       return ((state.misa >> (ext - 'A')) & 1);
     else
       return extension_table[ext];
+  }
+  void set_impl(uint8_t impl, bool val) { impl_table[impl] = val; }
+  bool supports_impl(uint8_t impl) const {
+    return impl_table[impl];
   }
   reg_t pc_alignment_mask() {
     return ~(reg_t)(supports_extension('C') ? 0 : 2);
@@ -414,6 +422,9 @@ public:
 
   void set_pmp_num(reg_t pmp_num);
   void set_pmp_granularity(reg_t pmp_granularity);
+  void set_mmu_capability(int cap);
+
+  const char* get_symbol(uint64_t addr);
 
 private:
   simif_t* sim;
@@ -431,6 +442,7 @@ private:
   FILE *log_file;
   bool halt_on_reset;
   std::vector<bool> extension_table;
+  std::vector<bool> impl_table;
   
 
   std::vector<insn_desc_t> instructions;
@@ -459,6 +471,7 @@ private:
   void build_opcode_map();
   void register_base_instructions();
   insn_func_t decode_insn(insn_t insn);
+  reg_t cal_satp(reg_t val) const;
 
   // Track repeated executions for processor_t::disasm()
   uint64_t last_pc, last_bits, executions;
@@ -476,12 +489,10 @@ public:
       reg_t vstart, vxrm, vxsat, vl, vtype, vlenb;
       reg_t vma, vta;
       reg_t vediv, vsew;
-      reg_t veew;
-      float vemul;
       float vflmul;
-      reg_t vmel;
-      reg_t ELEN, VLEN, SLEN;
+      reg_t ELEN, VLEN;
       bool vill;
+      bool vstart_alu;
 
       // vector element for varies SEW
       template<class T>
@@ -523,7 +534,7 @@ public:
 
       reg_t get_vlen() { return VLEN; }
       reg_t get_elen() { return ELEN; }
-      reg_t get_slen() { return SLEN; }
+      reg_t get_slen() { return VLEN; }
 
       VRM get_vround_mode() {
         return (VRM)vxrm;
