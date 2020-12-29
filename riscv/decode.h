@@ -276,7 +276,8 @@ private:
 #define require_rv32 require(xlen == 32)
 #define require_extension(s) require(p->supports_extension(s))
 #define require_impl(s) require(p->supports_impl(s))
-#define require_fp require((STATE.mstatus & MSTATUS_FS) != 0)
+#define require_fp require((p->supports_extension(EXT_ZFINX)) || ((STATE.mstatus & MSTATUS_FS) != 0))
+#define require_fp_old require((supports_extension(EXT_ZFINX)) || ((STATE.mstatus & MSTATUS_FS) != 0))
 #define require_accelerator require((STATE.mstatus & MSTATUS_XS) != 0)
 
 #define require_vector_vs require((STATE.mstatus & MSTATUS_VS) != 0);

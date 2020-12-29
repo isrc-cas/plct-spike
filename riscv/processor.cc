@@ -1419,17 +1419,17 @@ reg_t processor_t::get_csr(int which, insn_t insn, bool write, bool peek)
   switch (which)
   {
     case CSR_FFLAGS:
-      require_fp;
+      require_fp_old;
       if (!supports_extension('F'))
         break;
       ret(state.fflags);
     case CSR_FRM:
-      require_fp;
+      require_fp_old;
       if (!supports_extension('F'))
         break;
       ret(state.frm);
     case CSR_FCSR:
-      require_fp;
+      require_fp_old;
       if (!supports_extension('F'))
         break;
       ret((state.fflags << FSR_AEXC_SHIFT) | (state.frm << FSR_RD_SHIFT));
