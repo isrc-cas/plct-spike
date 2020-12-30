@@ -213,13 +213,58 @@ freg_t sim_t::get_freg(const std::vector<std::string>& args)
     throw trap_interactive();
 
   processor_t *p = get_core(args[0]);
-  int r = std::find(fpr_name, fpr_name + NFPR, args[1]) - fpr_name;
-  if (r == NFPR)
-    r = atoi(args[1].c_str());
-  if (r >= NFPR)
+  if (p->supports_extension(EXT_ZFINX)) {
+    int r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
+    if (r == NXPR)
+      r = atoi(args[1].c_str());
+    if (r >= NXPR)
+      throw trap_interactive();
+    if (p->get_xlen() == 32)
+      return {((uint64_t)-1 << 32) | p->get_state()->XPR[r] ,(uint64_t)-1};
+    else
+      return {p->get_state()->XPR[r] ,(uint64_t)-1};
+  } else {
+    int r = std::find(fpr_name, fpr_name + NFPR, args[1]) - fpr_name;
+    if (r == NFPR)
+      r = atoi(args[1].c_str());
+    if (r >= NFPR)
+      throw trap_interactive();
+    return p->get_state()->FPR[r];
+  }
+}
+
+freg_t sim_t::get_fregd(const std::vector<std::string>& args)
+{
+  if(args.size() != 2)
     throw trap_interactive();
 
-  return p->get_state()->FPR[r];
+  processor_t *p = get_core(args[0]);
+  if (p->supports_extension(EXT_ZFINX)) {
+  int r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
+  if (r == NXPR)
+    r = atoi(args[1].c_str());
+  if (r >= NXPR)
+    throw trap_interactive();
+    if (p->get_xlen() == 32) {
+      if (r & 1)
+        throw trap_interactive();
+      uint64_t value;
+      if(p->get_state()->mstatus & MSTATUS_MBE) {
+        value = (p->get_state()->XPR[r] << 32) | (p->get_state()->XPR[r + 1] & 0xffffffff);
+      } else {
+        value = (p->get_state()->XPR[r + 1] << 32) | (p->get_state()->XPR[r] & 0xffffffff);
+      }
+      return {value, (uint64_t)-1};
+    } else  //xlen == 64
+      return {p->get_state()->XPR[r] ,(uint64_t)-1};
+  } else {
+    int r = std::find(fpr_name, fpr_name + NFPR, args[1]) - fpr_name;
+    if (r == NFPR)
+      r = atoi(args[1].c_str());
+    if (r >= NFPR)
+      throw trap_interactive();
+    return p->get_state()->FPR[r];
+  }
 }
 
 void sim_t::interactive_vreg(const std::string& cmd, const std::vector<std::string>& args)
@@ -315,7 +360,7 @@ void sim_t::interactive_fregs(const std::string& cmd, const std::vector<std::str
 void sim_t::interactive_fregd(const std::string& cmd, const std::vector<std::string>& args)
 {
   fpr f;
-  f.r = get_freg(args);
+  f.r = get_fregd(args);
   fprintf(stderr, "%g\n", isBoxedF64(f.r) ? f.d : NAN);
 }
 

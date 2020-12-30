@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  disassembler_t* disassembler = new disassembler_t(xlen);
+  disassembler_t* disassembler = new disassembler_t(xlen, lowercase.find(std::string("zfinx")) != std::string::npos);
   if (extension) {
     for (auto disasm_insn : extension()->get_disasms()) {
       disassembler->add_insn(disasm_insn);

@@ -38,7 +38,7 @@ processor_t::processor_t(const char* isa, const char* priv, const char* varch,
   register_base_instructions();
   mmu = new mmu_t(sim, this);
 
-  disassembler = new disassembler_t(max_xlen);
+  disassembler = new disassembler_t(max_xlen, extension_table[EXT_ZFINX]);
   if (ext)
     for (auto disasm_insn : ext->get_disasms())
       disassembler->add_insn(disasm_insn);

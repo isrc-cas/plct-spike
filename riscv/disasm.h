@@ -86,7 +86,7 @@ class disasm_insn_t
 class disassembler_t
 {
  public:
-  disassembler_t(int xlen);
+  disassembler_t(int xlen, bool zfinx);
   ~disassembler_t();
 
   std::string disassemble(insn_t insn) const;
