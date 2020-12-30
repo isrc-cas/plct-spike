@@ -240,11 +240,11 @@ freg_t sim_t::get_fregd(const std::vector<std::string>& args)
 
   processor_t *p = get_core(args[0]);
   if (p->supports_extension(EXT_ZFINX)) {
-  int r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
-  if (r == NXPR)
-    r = atoi(args[1].c_str());
-  if (r >= NXPR)
-    throw trap_interactive();
+    int r = std::find(xpr_name, xpr_name + NXPR, args[1]) - xpr_name;
+    if (r == NXPR)
+      r = atoi(args[1].c_str());
+    if (r >= NXPR)
+      throw trap_interactive();
     if (p->get_xlen() == 32) {
       if (r & 1)
         throw trap_interactive();

@@ -2,6 +2,7 @@ require_extension('C');
 if (xlen == 32) {
   require_extension('F');
   require_fp;
+  require_no_zfinx;
   WRITE_FRD(f32(MMU.load_uint32(RVC_SP + insn.rvc_lwsp_imm())));
 } else { // c.ldsp
   require(insn.rvc_rd() != 0);
