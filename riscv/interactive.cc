@@ -249,11 +249,7 @@ freg_t sim_t::get_fregd(const std::vector<std::string>& args)
       if (r & 1)
         throw trap_interactive();
       uint64_t value;
-      if(p->get_state()->mstatus & MSTATUS_MBE) {
-        value = (p->get_state()->XPR[r] << 32) | (p->get_state()->XPR[r + 1] & 0xffffffff);
-      } else {
-        value = (p->get_state()->XPR[r + 1] << 32) | (p->get_state()->XPR[r] & 0xffffffff);
-      }
+      value = (p->get_state()->XPR[r + 1] << 32) | (p->get_state()->XPR[r] & 0xffffffff);
       return {value, (uint64_t)-1};
     } else  //xlen == 64
       return {p->get_state()->XPR[r] ,(uint64_t)-1};

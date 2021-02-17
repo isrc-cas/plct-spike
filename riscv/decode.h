@@ -212,8 +212,7 @@ private:
 #define RVC_SP READ_REG(X_SP)
 
 // FPU macros
-#define ZFINX_PAIR_REG(reg) (STATE.mstatus & MSTATUS_MBE)?(uint64_t)((READ_REG(reg + 1) << 32) >> 32) \
-  + (READ_REG(reg) << 32):(uint64_t)((READ_REG(reg) << 32) >> 32) + (READ_REG(reg + 1) << 32)
+#define ZFINX_PAIR_REG(reg) (uint64_t)((READ_REG(reg) << 32) >> 32) + (READ_REG(reg + 1) << 32)
 #define DO_ZFINX_REG(reg) ({require(reg % 2 == 0); \
   (reg?ZFINX_PAIR_REG(reg):(uint64_t)0); })
 #define FRS1 READ_FREG(insn.rs1())
@@ -241,13 +240,8 @@ private:
   if(xlen == 32)  { \
     require(reg % 2 == 0); \
     if(reg != 0) { \
-      if(STATE.mstatus & MSTATUS_MBE) { \
-        STATE.XPR.write(reg + 1, (uint32_t)((value << 32) >> 32)); \
-        STATE.XPR.write(reg, (uint32_t)(value >> 32)); \
-      } else {\
-        STATE.XPR.write(reg, (uint32_t)((value << 32) >> 32)); \
-        STATE.XPR.write(reg + 1, (uint32_t)(value >> 32)); \
-      }\
+      STATE.XPR.write(reg, (uint32_t)((value << 32) >> 32)); \
+      STATE.XPR.write(reg + 1, (uint32_t)(value >> 32)); \
     } \
   } \
   else  { \
