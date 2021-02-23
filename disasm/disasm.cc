@@ -1134,14 +1134,22 @@ disassembler_t::disassembler_t(int xlen, bool zfinx)
   #define DISASM_OPIV_VF_INSN(name) \
       add_insn(new disasm_insn_t(#name ".vv", match_##name##_vv, mask_##name##_vv, \
                   {&vd, &vs2, &vs1, &opt, &vm})); \
-      add_insn(new disasm_insn_t(#name ".vf", match_##name##_vf, mask_##name##_vf, \
+      if (zfinx) \
+        add_insn(new disasm_insn_t(#name ".vf", match_##name##_vf, mask_##name##_vf, \
+                        {&vd, &vs2, &xrs1, &opt, &vm})); \
+      else \
+        add_insn(new disasm_insn_t(#name ".vf", match_##name##_vf, mask_##name##_vf, \
                   {&vd, &vs2, &frs1, &opt, &vm})); \
 
   #define DISASM_OPIV_WF_INSN(name) \
       add_insn(new disasm_insn_t(#name ".wv", match_##name##_wv, mask_##name##_wv, \
                   {&vd, &vs2, &vs1, &opt, &vm})); \
-      add_insn(new disasm_insn_t(#name ".wf", match_##name##_wf, mask_##name##_wf, \
-                  {&vd, &vs2, &frs1, &opt, &vm})); \
+      if (zfinx) \
+        add_insn(new disasm_insn_t(#name ".wf", match_##name##_wf, mask_##name##_wf, \
+                    {&vd, &vs2, &xrs1, &opt, &vm})); \
+      else \
+        add_insn(new disasm_insn_t(#name ".wf", match_##name##_wf, mask_##name##_wf, \
+                    {&vd, &vs2, &frs1, &opt, &vm})); \
 
   #define DISASM_OPIV_V__INSN(name) \
       add_insn(new disasm_insn_t(#name ".vv", match_##name##_vv, mask_##name##_vv, \
@@ -1152,8 +1160,12 @@ disassembler_t::disassembler_t(int xlen, bool zfinx)
                   {&vd, &vs2, &vs1, &opt, &vm}));
 
   #define DISASM_OPIV__F_INSN(name) \
-    add_insn(new disasm_insn_t(#name ".vf", match_##name##_vf, mask_##name##_vf, \
-                {&vd, &vs2, &frs1, &opt, &vm})); \
+      if (zfinx) \
+        add_insn(new disasm_insn_t(#name ".vf", match_##name##_vf, mask_##name##_vf, \
+                    {&vd, &vs2, &xrs1, &opt, &vm})); \
+      else \
+        add_insn(new disasm_insn_t(#name ".vf", match_##name##_vf, mask_##name##_vf, \
+                    {&vd, &vs2, &frs1, &opt, &vm})); \
 
   #define DISASM_VFUNARY0_INSN(name, suf) \
     add_insn(new disasm_insn_t(#name "cvt.xu.f." #suf, \
@@ -1188,14 +1200,18 @@ disassembler_t::disassembler_t(int xlen, bool zfinx)
   DISASM_OPIV_VF_INSN(vfsgnj);
   DISASM_OPIV_VF_INSN(vfsgnjn);
   DISASM_OPIV_VF_INSN(vfsgnjx);
-  DISASM_INSN("vfmv.f.s", vfmv_f_s, 0, {&frd, &vs2});
-  DISASM_INSN("vfmv.s.f", vfmv_s_f, mask_vfmv_s_f, {&vd, &frs1});
+  if (!zfinx) {
+    DISASM_INSN("vfmv.f.s", vfmv_f_s, 0, {&frd, &vs2});
+    DISASM_INSN("vfmv.s.f", vfmv_s_f, mask_vfmv_s_f, {&vd, &frs1});
+  }
   DISASM_OPIV__F_INSN(vfslide1up);
   DISASM_OPIV__F_INSN(vfslide1down);
 
   //0b01_0000
-  DISASM_INSN("vfmerge.vfm", vfmerge_vfm, 0, {&vd, &vs2, &frs1, &v0});
-  DISASM_INSN("vfmv.v.f", vfmv_v_f, 0, {&vd, &frs1});
+  if (!zfinx) {
+    DISASM_INSN("vfmerge.vfm", vfmerge_vfm, 0, {&vd, &vs2, &frs1, &v0});
+    DISASM_INSN("vfmv.v.f", vfmv_v_f, 0, {&vd, &frs1});
+  }
   DISASM_OPIV_VF_INSN(vmfeq);
   DISASM_OPIV_VF_INSN(vmfle);
   DISASM_OPIV_VF_INSN(vmflt);

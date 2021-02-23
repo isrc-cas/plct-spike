@@ -271,11 +271,19 @@ void processor_t::parse_isa_string(const char* str)
         extension_table[EXT_ZFH] = true;
       } else if (ext_str == "zfinx") {
         extension_table[EXT_ZFINX] = true;
+      } else if (ext_str == "zdinx") {
+        extension_table[EXT_ZDINX] = true;
+        extension_table[EXT_ZFINX] = true;
+      } else if (ext_str == "zqinx") {
+        extension_table[EXT_ZQINX] = true;
+        extension_table[EXT_ZDINX] = true;
+        extension_table[EXT_ZFINX] = true;
+      } else if ((ext_str == "v") && extension_table[EXT_ZFINX]) { //z[fdq]inx_v
+    	extension_table['V'] = true;
       } else {
         sprintf(error_msg, "unsupported extension '%s'", ext_str.c_str());
         bad_isa_string(str, error_msg);
       }
-
       p = end;
     } else {
       sprintf(error_msg, "can't parse '%c(%d)'", *p, *p);
@@ -291,11 +299,23 @@ void processor_t::parse_isa_string(const char* str)
   if (supports_extension(EXT_ZFH) && !supports_extension('F'))
     bad_isa_string(str, "'Zfh' extension requires 'F'");
 
+  if (supports_extension(EXT_ZFINX) && supports_extension('F'))
+      bad_isa_string(str, "'Zfinx' extension is incompatible with 'F'");
+
   if (supports_extension('D') && !supports_extension('F'))
     bad_isa_string(str, "'D' extension requires 'F'");
 
   if (supports_extension('Q') && !supports_extension('D'))
     bad_isa_string(str, "'Q' extension requires 'D'");
+
+  if (extension_table[EXT_ZQINX])
+	  extension_table['Q'] = true;
+
+  if (extension_table[EXT_ZDINX])
+  	  extension_table['D'] = true;
+
+  if (extension_table[EXT_ZFINX])
+  	  extension_table['F'] = true;
 }
 
 void state_t::reset(reg_t max_isa)

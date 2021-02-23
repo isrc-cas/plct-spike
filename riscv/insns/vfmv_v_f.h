@@ -1,4 +1,5 @@
 // vfmv_vf vd, vs1
+require_no_zfinx;
 require_align(insn.rd(), P.VU.vflmul);
 VI_VFP_COMMON
 switch(P.VU.vsew) {

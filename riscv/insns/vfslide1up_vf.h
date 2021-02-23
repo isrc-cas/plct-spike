@@ -23,13 +23,13 @@ if (i != 0) {
 } else {
   switch (P.VU.vsew) {
     case e16:
-      P.VU.elt<float16_t>(rd_num, 0, true) = f16(FRS1);
+      P.VU.elt<float16_t>(rd_num, 0, true) = p->supports_extension(EXT_ZFINX)? f16(FRS1_H) : f16(FRS1);
       break;
     case e32:
-      P.VU.elt<float32_t>(rd_num, 0, true) = f32(FRS1);
+      P.VU.elt<float32_t>(rd_num, 0, true) = p->supports_extension(EXT_ZFINX)? f32(FRS1_F) : f32(FRS1);
       break;
     case e64:
-      P.VU.elt<float64_t>(rd_num, 0, true) = f64(FRS1);
+      P.VU.elt<float64_t>(rd_num, 0, true) = p->supports_extension(EXT_ZFINX)? f64(FRS1_F) : f64(FRS1);
       break;
   }
 }

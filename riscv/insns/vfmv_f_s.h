@@ -1,5 +1,6 @@
 // vfmv_f_s: rd = vs2[0] (rs1=0)
 require_vector(true);
+require_no_zfinx;
 require_fp;
 require((P.VU.vsew == e16 && p->supports_extension(EXT_ZFH)) ||
         (P.VU.vsew == e32 && p->supports_extension('F')) ||

@@ -244,6 +244,8 @@ typedef enum {
   EXT_ZFH   = 0,
   EXT_ZVEDIV,
   EXT_ZFINX,
+  EXT_ZDINX,
+  EXT_ZQINX,
 } isa_extension_t;
 
 typedef enum {

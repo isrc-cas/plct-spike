@@ -1,4 +1,5 @@
 // vfmerge_vf vd, vs2, vs1, vm
+require_no_zfinx;
 VI_CHECK_SSS(false);
 VI_VFP_COMMON;
 

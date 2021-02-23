@@ -214,19 +214,19 @@ private:
 // FPU macros
 #define ZFINX_PAIR_REG(reg) (uint64_t)((READ_REG(reg) << 32) >> 32) + (READ_REG(reg + 1) << 32)
 #define DO_ZFINX_REG(reg) ({require(reg % 2 == 0); \
-  (reg?ZFINX_PAIR_REG(reg):(uint64_t)0); })
+  (reg ? ZFINX_PAIR_REG(reg) : (uint64_t)0); })
 #define FRS1 READ_FREG(insn.rs1())
 #define FRS2 READ_FREG(insn.rs2())
 #define FRS3 READ_FREG(insn.rs3())
 #define FRS1_H freg(f16(STATE.XPR[insn.rs1()] & (uint16_t)-1))
 #define FRS1_F freg(f32(STATE.XPR[insn.rs1()] & (uint32_t)-1))
-#define FRS1_D (xlen == 32 ?freg(f64(DO_ZFINX_REG(insn.rs1()))):freg(f64(STATE.XPR[insn.rs1()] & (uint64_t)-1)))
+#define FRS1_D (xlen == 32 ? freg(f64(DO_ZFINX_REG(insn.rs1()))) : freg(f64(STATE.XPR[insn.rs1()] & (uint64_t)-1)))
 #define FRS2_H freg(f16(STATE.XPR[insn.rs2()] & (uint16_t)-1))
 #define FRS2_F freg(f32(STATE.XPR[insn.rs2()] & (uint32_t)-1))
-#define FRS2_D (xlen == 32 ?freg(f64(DO_ZFINX_REG(insn.rs2()))):freg(f64(STATE.XPR[insn.rs2()] & (uint64_t)-1)))
+#define FRS2_D (xlen == 32 ? freg(f64(DO_ZFINX_REG(insn.rs2()))) : freg(f64(STATE.XPR[insn.rs2()] & (uint64_t)-1)))
 #define FRS3_H freg(f16(STATE.XPR[insn.rs3()] & (uint16_t)-1))
 #define FRS3_F freg(f32(STATE.XPR[insn.rs3()] & (uint32_t)-1))
-#define FRS3_D (xlen == 32 ?freg(f64(DO_ZFINX_REG(insn.rs3()))):freg(f64(STATE.XPR[insn.rs3()] & (uint64_t)-1)))
+#define FRS3_D (xlen == 32 ? freg(f64(DO_ZFINX_REG(insn.rs3()))) : freg(f64(STATE.XPR[insn.rs3()] & (uint64_t)-1)))
 #define ZFINX_BOXING_H(value) ((uint64_t)value | (((uint64_t)-1) << 16)) 
 #define ZFINX_BOXING_F(value) ((uint64_t)value | (((uint64_t)-1) << 32))
 #define dirty_fp_state (STATE.mstatus |= MSTATUS_FS | (xlen == 64 ? MSTATUS64_SD : MSTATUS32_SD))
@@ -2185,7 +2185,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
   switch(P.VU.vsew) { \
     case e16: {\
       float16_t &vd = P.VU.elt<float16_t>(rd_num, i, true); \
-      float16_t rs1 = f16(READ_FREG(rs1_num)); \
+      float16_t rs1 = p->supports_extension(EXT_ZFINX) ? f16(READ_REG(rs1_num) & (uint16_t)-1) : f16(READ_FREG(rs1_num)); \
       float16_t vs2 = P.VU.elt<float16_t>(rs2_num, i); \
       BODY16; \
       set_fp_exceptions; \
@@ -2193,7 +2193,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     }\
     case e32: {\
       float32_t &vd = P.VU.elt<float32_t>(rd_num, i, true); \
-      float32_t rs1 = f32(READ_FREG(rs1_num)); \
+      float32_t rs1 = p->supports_extension(EXT_ZFINX) ? f32(READ_REG(rs1_num) & (uint32_t)-1) : f32(READ_FREG(rs1_num)); \
       float32_t vs2 = P.VU.elt<float32_t>(rs2_num, i); \
       BODY32; \
       set_fp_exceptions; \
@@ -2201,7 +2201,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     }\
     case e64: {\
       float64_t &vd = P.VU.elt<float64_t>(rd_num, i, true); \
-      float64_t rs1 = f64(READ_FREG(rs1_num)); \
+      float64_t rs1 = p->supports_extension(EXT_ZFINX) ? (xlen == 32? f64(DO_ZFINX_REG(rs1_num)) : f64(READ_REG(rs1_num) & (uint64_t)-1)) : f64(READ_FREG(rs1_num)); \
       float64_t vs2 = P.VU.elt<float64_t>(rs2_num, i); \
       BODY64; \
       set_fp_exceptions; \
@@ -2221,7 +2221,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     case e16: {\
       float16_t vs2 = P.VU.elt<float16_t>(rs2_num, i); \
       float16_t vs1 = P.VU.elt<float16_t>(rs1_num, i); \
-      float16_t rs1 = f16(READ_FREG(rs1_num)); \
+      float16_t rs1 = p->supports_extension(EXT_ZFINX) ? f16(READ_REG(rs1_num) & (uint16_t)-1) : f16(READ_FREG(rs1_num)); \
       BODY16; \
       set_fp_exceptions; \
       break; \
@@ -2229,7 +2229,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     case e32: {\
       float32_t vs2 = P.VU.elt<float32_t>(rs2_num, i); \
       float32_t vs1 = P.VU.elt<float32_t>(rs1_num, i); \
-      float32_t rs1 = f32(READ_FREG(rs1_num)); \
+      float32_t rs1 = p->supports_extension(EXT_ZFINX) ? f32(READ_REG(rs1_num) & (uint32_t)-1) : f32(READ_FREG(rs1_num)); \
       BODY32; \
       set_fp_exceptions; \
       break; \
@@ -2237,7 +2237,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     case e64: {\
       float64_t vs2 = P.VU.elt<float64_t>(rs2_num, i); \
       float64_t vs1 = P.VU.elt<float64_t>(rs1_num, i); \
-      float64_t rs1 = f64(READ_FREG(rs1_num)); \
+      float64_t rs1 = p->supports_extension(EXT_ZFINX) ? (xlen == 32 ? f64(DO_ZFINX_REG(rs1_num)) : f64(READ_REG(rs1_num) & (uint64_t)-1)) : f64(READ_FREG(rs1_num)); \
       BODY64; \
       set_fp_exceptions; \
       break; \
@@ -2255,7 +2255,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     case e16: { \
       float32_t &vd = P.VU.elt<float32_t>(rd_num, i, true); \
       float32_t vs2 = f16_to_f32(P.VU.elt<float16_t>(rs2_num, i)); \
-      float32_t rs1 = f16_to_f32(f16(READ_FREG(rs1_num))); \
+      float32_t rs1 = f16_to_f32(p->supports_extension(EXT_ZFINX) ? f16(READ_REG(rs1_num) & (uint16_t)-1) : f16(READ_FREG(rs1_num))); \
       BODY16; \
       set_fp_exceptions; \
       break; \
@@ -2263,7 +2263,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     case e32: {\
       float64_t &vd = P.VU.elt<float64_t>(rd_num, i, true); \
       float64_t vs2 = f32_to_f64(P.VU.elt<float32_t>(rs2_num, i)); \
-      float64_t rs1 = f32_to_f64(f32(READ_FREG(rs1_num))); \
+      float64_t rs1 = f32_to_f64(p->supports_extension(EXT_ZFINX) ? f32(READ_REG(rs1_num) & (uint32_t)-1) : f32(READ_FREG(rs1_num))); \
       BODY32; \
       set_fp_exceptions; \
       break; \
@@ -2310,7 +2310,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     case e16: {\
       float32_t &vd = P.VU.elt<float32_t>(rd_num, i, true); \
       float32_t vs2 = P.VU.elt<float32_t>(rs2_num, i); \
-      float32_t rs1 = f16_to_f32(f16(READ_FREG(rs1_num))); \
+      float32_t rs1 = f16_to_f32(p->supports_extension(EXT_ZFINX) ? f16(READ_REG(rs1_num) & (uint16_t)-1) : f16(READ_FREG(rs1_num))); \
       BODY16; \
       set_fp_exceptions; \
       break; \
@@ -2318,7 +2318,7 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
     case e32: {\
       float64_t &vd = P.VU.elt<float64_t>(rd_num, i, true); \
       float64_t vs2 = P.VU.elt<float64_t>(rs2_num, i); \
-      float64_t rs1 = f32_to_f64(f32(READ_FREG(rs1_num))); \
+      float64_t rs1 = f32_to_f64(p->supports_extension(EXT_ZFINX) ? f32(READ_REG(rs1_num) & (uint32_t)-1) : f32(READ_FREG(rs1_num))); \
       BODY32; \
       set_fp_exceptions; \
       break; \
