@@ -1,0 +1,13 @@
+nicext_subproject_deps = \
+	spike_main \
+	riscv \
+	disasm \
+	softfloat \
+
+nicext_srcs = \
+	nice_demo.cc \
+        nice_rocc_demo.cc \
+
+nicext_CFLAGS = -fPIC
+
+nicext_install_shared_lib = yes
