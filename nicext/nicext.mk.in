@@ -1,8 +1,6 @@
 nicext_subproject_deps = \
-	spike_main \
 	riscv \
 	disasm \
-	softfloat \
 
 nicext_srcs = \
 	nice_demo.cc \

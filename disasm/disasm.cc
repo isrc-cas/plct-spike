@@ -1333,6 +1333,9 @@ disassembler_t::disassembler_t(int xlen)
     DISASM_INSN("c.addiw", c_addiw, 0, {&xrd, &rvc_imm});
   }
 
+  add_insn(new disasm_insn_t("custom_sbuf", 0x0400207b, 0xFE00707F, {&xrs1}));
+  add_insn(new disasm_insn_t("custom_wsetup", 0x0800207b, 0xFE00707F, {&xrs1}));
+  add_insn(new disasm_insn_t("custom_rowsum", 0x0C00607b, 0xFE00707F, {&xrd, &xrs1}));
   // provide a default disassembly for all instructions as a fallback
   #define DECLARE_INSN(code, match, mask) \
    add_insn(new disasm_insn_t(#code " (args unknown)", match, mask, {}));

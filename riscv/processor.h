@@ -244,6 +244,7 @@ typedef enum {
 typedef enum {
   // 65('A') ~ 90('Z') is reserved for standard isa in misa
   EXT_ZFH   = 0,
+  EXT_ZNICE,
 } isa_extension_t;
 
 typedef enum {
@@ -262,6 +263,14 @@ static int cto(reg_t val)
     val >>= 1, res++;
   return res;
 }
+
+#define MAX_COL_NUM 4
+struct rocc_state_t
+{
+	reg_t matrix_config;
+	reg_t row_buffer[MAX_COL_NUM];
+};
+#undef MAX_COL_NUM
 
 // this class represents one processor in a RISC-V machine.
 class processor_t : public abstract_device_t
@@ -544,6 +553,7 @@ public:
   };
 
   vectorUnit_t VU;
+  rocc_state_t rocc;
 };
 
 reg_t illegal_instruction(processor_t* p, insn_t insn, reg_t pc);
