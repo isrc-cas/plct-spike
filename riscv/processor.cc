@@ -269,6 +269,8 @@ void processor_t::parse_isa_string(const char* str)
       auto ext_str = std::string(ext, end - ext);
       if (ext_str == "zfh") {
         extension_table[EXT_ZFH] = true;
+      } else if (ext_str == "zce") {
+        extension_table[EXT_ZCE] = true;
       } else {
         sprintf(error_msg, "unsupported extension '%s'", ext_str.c_str());
         bad_isa_string(str, error_msg);
@@ -1282,6 +1284,15 @@ void processor_t::set_csr(int which, reg_t val)
       dirty_vs_state;
       VU.vxrm = val & 0x3ul;
       break;
+    case CSR_MTBLJALVEC:
+      state.mtbljalvec = val;
+      break;
+    case CSR_UTBLJALVEC:
+      state.utbljalvec = val;
+      break;
+    case CSR_STBLJALVEC:
+      state.stbljalvec = val;
+      break;
   }
 
 #if defined(RISCV_ENABLE_COMMITLOG)
@@ -1715,6 +1726,18 @@ reg_t processor_t::get_csr(int which, insn_t insn, bool write, bool peek)
       if (!supports_extension('V'))
         break;
       ret(VU.vlenb);
+    case CSR_MTBLJALVEC:
+      if (!supports_extension(EXT_ZCE))
+        break;
+      ret(state.mtbljalvec);
+    case CSR_UTBLJALVEC:
+      if (!supports_extension(EXT_ZCE))
+        break;
+      ret(state.utbljalvec);
+    case CSR_STBLJALVEC:
+      if (!supports_extension(EXT_ZCE))
+        break;
+      ret(state.stbljalvec);
   }
 
 #undef ret

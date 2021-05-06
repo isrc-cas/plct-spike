@@ -207,6 +207,10 @@ struct state_t
   reg_t tselect;
   mcontrol_t mcontrol[num_triggers];
   reg_t tdata2[num_triggers];
+
+  reg_t mtbljalvec;
+  reg_t stbljalvec;
+  reg_t utbljalvec;
   bool debug_mode;
 
   static const int max_pmp = 16;
@@ -244,6 +248,7 @@ typedef enum {
 typedef enum {
   // 65('A') ~ 90('Z') is reserved for standard isa in misa
   EXT_ZFH   = 0,
+  EXT_ZCE,
 } isa_extension_t;
 
 typedef enum {

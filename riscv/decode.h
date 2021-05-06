@@ -33,6 +33,13 @@ const int NCSR = 4096;
 
 #define X_RA 1
 #define X_SP 2
+#define X_GP 3
+#define X_TP 4
+#define X_S0 8
+#define X_S1 9
+#define X_Sn 16
+#define X_A0 10
+
 
 #define VCSR_VXRM_SHIFT 1
 #define VCSR_VXRM  (0x3 << VCSR_VXRM_SHIFT)
@@ -114,6 +121,39 @@ public:
   uint64_t rvc_rs1s() { return 8 + x(7, 3); }
   uint64_t rvc_rs2s() { return 8 + x(2, 3); }
 
+  uint64_t rvzce_rd() { return 8 + x(7, 3); }
+  uint64_t rvzce_rs1() { return 8 + x(15, 3); }
+  uint64_t rvzce_rs2() { return 8 + x(20, 3); }
+  uint64_t rvzce_c_rs1() { return rvzce_rd(); }
+  uint64_t rvzce_c_rs2() { return 8 + x(2, 3); }
+  uint64_t rvzce_imm() { return xs(23, 9); }
+  uint64_t rvzce_scmpimm() { return xs(24, 6); }
+  uint64_t rvzce_offset() { return (x(7, 5) << 1) + (x(20, 4) << 6); }
+  uint64_t rvzce_nzimm() { return (x(4, 3) << 1) + (x(10, 3) << 4); }
+  uint64_t rvzce_c_scale() { return x(2, 2); }
+  uint64_t rvzce_scale() { return x(18, 2); }
+  uint64_t rvzce_brimm() { return (x(17, 1) << 1) + (xs(15, 2) << 11) + (x(20, 2) << 9) + (x(22, 7) << 2); }
+  uint64_t rvzce_lwimm() { return (x(22, 7) << 2) + (x(20, 2) << 9) + (xs(15, 5) << 11); }
+  uint64_t rvzce_swimm() { return (x(25, 4) << 5) + (xs(15, 5) << 11) + (x(9, 3) << 2) + (x(7, 2) << 9); }
+  uint64_t rvzce_ldimm() { return (x(23, 6) << 2) + (xs(22, 1) << 16) + (x(20, 2) << 9) + (x(15, 5) << 11); }
+  uint64_t rvzce_sdimm() { return (x(25, 4) << 5) + (x(15, 5) << 11) + (x(10, 2) << 2) + (xs(9, 1) << 16) + (x(7, 2) << 9); }
+  uint64_t rvzce_lduimm() { return (x(10, 1) << 3) + (x(5, 2) << 1) + x(11, 1); }
+  uint64_t rvzce_stuimm() { return (x(10, 2) << 3) + (x(5, 2) << 1); }
+  uint64_t rvzce_index8() { return x(2, 8); }
+  uint64_t rvzce_index13() { return x(7, 5) + (x(15, 8) << 5); }
+  uint64_t rvzce_rlist() { return x(16, 4); }
+  uint64_t rvzce_ra() { return x(15, 1); }
+  uint64_t rvzce_mv() { return x(20, 3); }
+  uint64_t rvzce_ret_val() { return x(20, 3); }
+  uint64_t rvzce_spimm() { return x(7, 5) << 4; }
+  uint64_t rvzce_c_rlist() { return x(7, 3); }
+  uint64_t rvzce_c_rlist2() { return x(7, 1) + (x(5, 1) << 1); }
+  uint64_t rvzce_ret0() { return x(6, 1); }
+  uint64_t rvzce_e_ret0() { return x(9, 1); }
+  uint64_t rvzce_c_spimm3() { return x(2, 3); }
+  uint64_t rvzce_c_spimm2() { return x(2, 2); }
+  uint64_t rvzce_c_spimm1() { return x(2, 1); }
+  
   uint64_t v_vm() { return x(25, 1); }
   uint64_t v_wd() { return x(26, 1); }
   uint64_t v_nf() { return x(29, 3); }
@@ -213,6 +253,24 @@ private:
 #define RVC_FRS2S READ_FREG(insn.rvc_rs2s())
 #define RVC_SP READ_REG(X_SP)
 
+//RVZCE macros
+#define RVZCE_RS1 READ_REG(insn.rvzce_rs1())
+#define RVZCE_RS2 READ_REG(insn.rvzce_rs2())
+#define RVZCE_C_RS1 READ_REG(insn.rvzce_c_rs1())
+#define RVZCE_C_RS2 READ_REG(insn.rvzce_c_rs2())
+#define RVZCE_RD READ_REG(insn.rd())
+#define WRITE_RVZCE_RD(value) WRITE_REG(insn.rvzce_rd(), value)
+#define GP READ_REG(X_GP)
+#define TP READ_REG(X_TP)
+#define SP READ_REG(X_SP)
+#define RA READ_REG(X_RA)
+#define S0_1(n) READ_REG(X_S0 + n)
+#define Sn(n) READ_REG(X_Sn + n)
+#define A(n) READ_REG(X_A0 + n)
+#define align16(x) (((x)+15) & ~0xf)
+
+#define WRITE_RVZCE_RS2(value) WRITE_REG(insn.rvzce_rs2(), value)
+
 // FPU macros
 #define FRS1 READ_FREG(insn.rs1())
 #define FRS2 READ_FREG(insn.rs2())
@@ -282,6 +340,10 @@ private:
                              } \
                              softfloat_exceptionFlags = 0; })
 
+#define sext8(x) ((sreg_t)(int8_t)(x))
+#define zext8(x) ((reg_t)(uint8_t)(x))
+#define sext16(x) ((sreg_t)(int16_t)(x))
+#define zext16(x) ((reg_t)(uint16_t)(x))
 #define sext32(x) ((sreg_t)(int32_t)(x))
 #define zext32(x) ((reg_t)(uint32_t)(x))
 #define sext_xlen(x) (((sreg_t)(x) << (64-xlen)) >> (64-xlen))
@@ -2382,6 +2444,98 @@ for (reg_t i = 0; i < P.VU.vlmax && P.VU.vl != 0; ++i) { \
       require(0); \
       break; \
   }
+
+#define ZCE_PUSH(bytes, rlist, ra, spimm, mv) \
+reg_t addr = SP; \
+if (ra) { \
+  addr -= bytes; \
+  switch (bytes) { \
+  case 4: \
+    MMU.store_uint32(addr, RA); \
+    break; \
+  case 8: \
+    MMU.store_uint64(addr, RA); \
+    break; \
+  default: \
+    break; \
+  } \
+} \
+ \
+reg_t data; \
+for (int i=0; i < rlist; i++) { \
+  addr -= bytes; \
+  data = i < 2 ? S0_1(i) : Sn(i); \
+  switch (bytes) { \
+  case 4: \
+    MMU.store_uint32(addr, data); \
+    break; \
+  case 8: \
+    MMU.store_uint64(addr, data); \
+    break; \
+  default: \
+    break; \
+  } \
+} \
+\
+for (int i=0; i < mv; i++) { \
+   WRITE_REG(i < 2 ? X_S0 + i : X_Sn + i, A(i)); \
+} \
+\
+reg_t stack_adjust = align16(addr - SP) - spimm; \
+WRITE_REG(X_SP, SP + stack_adjust)
+ 
+#define ZCE_POP(bytes, rlist, ra, spimm, ret_val, ret) \
+reg_t data; \
+reg_t stack_adjust = rlist * (xlen >> 3); \
+stack_adjust += ra? xlen >> 3 : 0; \
+stack_adjust = align16(stack_adjust) + spimm; \
+reg_t addr = SP + stack_adjust; \
+switch (ret_val) { \
+case 1: \
+  WRITE_REG(X_A0, 0); \
+  break; \
+case 2: \
+  WRITE_REG(X_A0, 1); \
+  break; \
+case 3: \
+  WRITE_REG(X_A0, S0_1(0)); \
+  break; \
+default: \
+  break; \
+} \
+\
+if (ra) { \
+  addr -= bytes; \
+  switch (bytes) { \
+  case 4: \
+    WRITE_REG(X_RA, MMU.load_int32(addr)); \
+    break; \
+  case 8: \
+    WRITE_REG(X_RA, MMU.load_int64(addr)); \
+    break; \
+  default: \
+    break; \
+  } \
+} \
+\
+for (int i=0; i < rlist; i++) { \
+  addr -= bytes; \
+  reg_t reg = i < 2 ? X_S0 + i : X_Sn + i; \
+  switch (bytes) { \
+  case 4: \
+    WRITE_REG(reg, MMU.load_int32(addr)); \
+    break; \
+  case 8: \
+    WRITE_REG(reg, MMU.load_int64(addr)); \
+    break; \
+  default: \
+    break; \
+  } \
+} \
+\
+WRITE_REG(X_SP, SP + stack_adjust); \
+if (ret) \
+  set_pc(RA)
 
 #define DEBUG_START             0x0
 #define DEBUG_END               (0x1000 - 1)

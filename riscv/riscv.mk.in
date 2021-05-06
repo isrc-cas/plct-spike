@@ -922,6 +922,59 @@ riscv_insn_priv = \
 	sret \
 	wfi \
 
+riscv_insn_ext_zcea = \
+	c_zext_b \
+	c_zext_h \
+	c_zext_w \
+	c_sext_b \
+	c_sext_h \
+	c_not \
+	c_neg \
+	c_mul \
+	muli \
+	muliw \
+	muliadd \
+	muliaddw \
+	addiadd \
+	addiaddw \
+	beqi \
+	bnei \
+
+
+riscv_insn_ext_zceb = \
+	c_decbnez \
+	decbnez \
+	lwgp \
+	swgp \
+	lwtp \
+	swtp \
+	ldgp \
+	sdgp \
+	ldtp \
+	sdtp \
+	c_sb \
+	c_lbu \
+	c_sh \
+	c_lhu \
+	c_tbljal \
+	tbljal \
+	push \
+	pop \
+	popret \
+	c_push \
+	c_push_e_s2 \
+	c_push_e_s3 \
+	c_push_e_s4 \
+	c_pop \
+	c_pop_e \
+	c_popret \
+	c_popret_e_s2 \
+	c_popret_e_s3 \
+	c_popret_e_s4 \
+
+riscv_insn_ext_zce = \
+	$(riscv_insn_ext_zcea) \
+	$(riscv_insn_ext_zceb) \
 
 riscv_insn_list = \
 	$(riscv_insn_ext_a) \
@@ -933,8 +986,9 @@ riscv_insn_list = \
 	$(riscv_insn_ext_zfh) \
 	$(riscv_insn_ext_q) \
 	$(riscv_insn_ext_b) \
-    $(riscv_insn_ext_k) \
+	$(riscv_insn_ext_k) \
 	$(if $(HAVE_INT128),$(riscv_insn_ext_v),) \
+	$(riscv_insn_ext_zce) \
 	$(riscv_insn_ext_h) \
 	$(riscv_insn_priv) \
 
