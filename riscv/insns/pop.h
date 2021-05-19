@@ -8,6 +8,5 @@ if (rlist > 12)  //pop.e
 
 reg_t spimm = insn.rvzce_spimm();
 reg_t ret_val = insn.rvzce_ret_val();
-reg_t ra = insn.rvzce_ra();
 
-ZCE_POP(bytes, rlist, ra, spimm, ret_val, false);
+ZCE_POP(bytes, rlist, true, spimm, ret_val, false);

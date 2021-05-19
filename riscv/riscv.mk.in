@@ -931,46 +931,34 @@ riscv_insn_ext_zcea = \
 	c_not \
 	c_neg \
 	c_mul \
+	c_mva01s07 \
 	muli \
-	muliw \
-	muliadd \
-	muliaddw \
-	addiadd \
-	addiaddw \
 	beqi \
 	bnei \
-
 
 riscv_insn_ext_zceb = \
 	c_decbnez \
 	decbnez \
 	lwgp \
 	swgp \
-	lwtp \
-	swtp \
 	ldgp \
 	sdgp \
-	ldtp \
-	sdtp \
 	c_sb \
 	c_lbu \
+	c_lb \
 	c_sh \
 	c_lhu \
+	c_lh \
 	c_tbljal \
-	tbljal \
 	push \
 	pop \
 	popret \
 	c_push \
-	c_push_e_s2 \
-	c_push_e_s3 \
-	c_push_e_s4 \
+	c_push_e \
 	c_pop \
 	c_pop_e \
 	c_popret \
-	c_popret_e_s2 \
-	c_popret_e_s3 \
-	c_popret_e_s4 \
+	c_popret_e \
 
 riscv_insn_ext_zce = \
 	$(riscv_insn_ext_zcea) \
