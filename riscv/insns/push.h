@@ -6,5 +6,5 @@ reg_t spimm = insn.rvzce_spimm();
 reg_t alist;
 if (rlist > 12)  //push.e
   rlist -= 10;
-alist = rlist <= 4 ? rlist : 4;
+alist = insn.rvzce_areg_list()? rlist <= 4 ? rlist : 4 : 0;
 ZCE_PUSH(bytes, rlist, true, spimm, alist);

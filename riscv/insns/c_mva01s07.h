@@ -1,0 +1,3 @@
+require_extension(EXT_ZCE);
+WRITE_REG(X_A0, RVZCE_SREG(1));
+WRITE_REG(X_A0 + 1, RVZCE_SREG(2));

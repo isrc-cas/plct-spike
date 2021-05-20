@@ -148,6 +148,7 @@ public:
   uint64_t rvzce_lshimm() { return (x(10, 2) << 3) + (x(5, 2) << 1); }
   uint64_t rvzce_index8() { return x(2, 8); }
   uint64_t rvzce_rlist() { return x(16, 4); }
+  uint64_t rvzce_areg_list() { return x(20, 1); }
   uint64_t rvzce_ret_val() { return x(20, 2); }
   uint64_t rvzce_spimm() { return x(7, 5) << 4; }
   uint64_t rvzce_c_rlist3() { return rlist3(x(2, 3)); }

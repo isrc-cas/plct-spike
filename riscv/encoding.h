@@ -2172,7 +2172,7 @@
 #define MATCH_C_TBLJAL 0x8800
 #define MASK_C_TBLJAL  0xfc03
 #define MATCH_PUSH 0x402b
-#define MASK_PUSH  0xfff0f07f
+#define MASK_PUSH  0xffe0f07f
 #define MATCH_POP 0x502b
 #define MASK_POP  0xffc0f07f
 #define MATCH_POPRET 0x602b
