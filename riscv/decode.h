@@ -2528,7 +2528,6 @@ for (reg_t i=0; i < rlist; i++) { \
   } \
 } \
 \
-WRITE_REG(X_SP, SP + stack_adjust); \
 switch (ret_val) { \
 case 1: \
   WRITE_REG(X_A0, 0); \
@@ -2543,6 +2542,7 @@ default: \
   break; \
 } \
 \
+WRITE_REG(X_SP, SP + stack_adjust); \
 if (ret) \
   set_pc(RA)
 
