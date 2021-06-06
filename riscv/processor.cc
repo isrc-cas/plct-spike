@@ -1852,7 +1852,8 @@ void processor_t::register_base_instructions()
 {
   #define DECLARE_INSN(name, match, mask) \
     insn_bits_t name##_match = (match), name##_mask = (mask); \
-    unsigned name##_arch_en = (unsigned)-1;
+    unsigned name##_arch_en = (unsigned)-1; \
+    unsigned char name##_ext_conflict = 'I';
   #define DECLARE_RV32_ONLY(name) {name##_arch_en = 32;}
   #define DECLARE_RV64_ONLY(name) {name##_arch_en = 64;}
 
@@ -1861,16 +1862,31 @@ void processor_t::register_base_instructions()
   #undef DECLARE_RV32_INSN
   #undef DECLARE_INSN
 
+  #define DELCARE_EXT_CONFLICT(name, ext) {name##_ext_conflict = ext;}
+
+  #include "encoding.h"
+  #undef DELCARE_EXT_CONFLICT
+
   #define DEFINE_INSN(name) \
     extern reg_t rv32_##name(processor_t*, insn_t, reg_t); \
     extern reg_t rv64_##name(processor_t*, insn_t, reg_t); \
     register_insn((insn_desc_t){ \
       name##_match, \
       name##_mask, \
-      (name##_arch_en & 32) ? rv32_##name : nullptr, \
-      (name##_arch_en & 64) ? rv64_##name : nullptr});
+      supports_extension(name##_ext_conflict) && (name##_arch_en & 32) ? rv32_##name : nullptr, \
+      supports_extension(name##_ext_conflict) && (name##_arch_en & 64) ? rv64_##name : nullptr});
   #include "insn_list.h"
   #undef DEFINE_INSN
+
+  #define DECLARE_SAME_INSN(name1, name2) \
+    register_insn((insn_desc_t){ \
+      name1##_match, \
+	  name1##_mask, \
+	  (name2##_arch_en & 32) ? rv32_##name2 : nullptr, \
+	  (name2##_arch_en & 64) ? rv64_##name2 : nullptr});
+
+  #include "encoding.h"
+  #undef DECLARE_SAME_INSN
 
   register_insn({0, 0, &illegal_instruction, &illegal_instruction});
   build_opcode_map();
