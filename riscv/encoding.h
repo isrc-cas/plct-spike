@@ -2161,7 +2161,7 @@
 #define MASK_C_NEG  0xfc7f
 #define MATCH_C_MUL 0x9c41
 #define MASK_C_MUL  0xfc63
-#define MATCH_C_MVA01S07 0x9c62
+#define MATCH_C_MVA01S07 0x9c61
 #define MASK_C_MVA01S07  0xfc63
 #define MATCH_MULI 0x100b
 #define MASK_MULI  0x707f
